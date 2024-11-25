@@ -29,7 +29,7 @@ parser.add_argument('--stop-token-ids',
                     default='',
                     help='Comma-separated stop token IDs')
 parser.add_argument("--host", type=str, default='localhost')
-parser.add_argument("--port", type=int, default=10000)
+parser.add_argument("--port", type=int, default=10001)
 
 # Parse the arguments
 args = parser.parse_args()
