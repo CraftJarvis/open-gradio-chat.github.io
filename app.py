@@ -69,29 +69,32 @@ def predict(message, history, model, model_url, api_key, temp, max_output_tokens
 
 
     # Create a chat completion request and send it to the API server
-    stream = client.chat.completions.create(
-        model=model,  # Model name to use
-        messages=history_openai_format,  # Chat history
-        temperature=temp,  # Temperature for text generation
-        stream=True,  # Stream response
-        max_tokens = max_output_tokens,
-        # extra_body={
-        #     'repetition_penalty':
-        #     1,
-        #     'stop_token_ids': [
-        #         int(id.strip()) for id in args.stop_token_ids.split(',')
-        #         if id.strip()
-        #     ] if args.stop_token_ids else []}
-        )
+    try:
+        stream = client.chat.completions.create(
+            model=model,  # Model name to use
+            messages=history_openai_format,  # Chat history
+            temperature=temp,  # Temperature for text generation
+            stream=True,  # Stream response
+            max_tokens = max_output_tokens,
+            # extra_body={
+            #     'repetition_penalty':
+            #     1,
+            #     'stop_token_ids': [
+            #         int(id.strip()) for id in args.stop_token_ids.split(',')
+            #         if id.strip()
+            #     ] if args.stop_token_ids else []}
+            )
 
-    # Read and return generated text from response stream
-    partial_message = ""
-    for chunk in stream:
-        try:
-            partial_message += (chunk.choices[0].delta.content or "")
-        except:
-            pass
-        yield partial_message
+        # Read and return generated text from response stream
+        partial_message = ""
+        for chunk in stream:
+            try:
+                partial_message += (chunk.choices[0].delta.content or "")
+            except:
+                pass
+            yield partial_message
+    except Exception as e:
+        raise gr.Error(str(e))
 
 
 multimodaltextbox = gr.MultimodalTextbox()
