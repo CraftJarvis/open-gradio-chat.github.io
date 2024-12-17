@@ -1,0 +1,29 @@
+{
+  "timestamp": "2024-12-17 14:31:01",
+  "message": {
+    "text": "hello",
+    "files": []
+  },
+  "history": [],
+  "model": "mc-vsft-sft-llama3_llava_next_8b",
+  "model_url": "http://100.106.93.40:8000/v1",
+  "api_key": "EMPTY",
+  "temperature": 0.7,
+  "max_output_tokens": 512,
+  "generation": "Hello! Is there anything specific you would like to know or discuss? I'm here to help with any questions you might have.",
+  "post_conv": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "hello"
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": "Hello! Is there anything specific you would like to know or discuss? I'm here to help with any questions you might have."
+    }
+  ]
+}
