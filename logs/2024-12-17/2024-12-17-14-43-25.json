@@ -1,11 +1,11 @@
 {
-  "timestamp": "2024-12-17 14:29:13",
+  "timestamp": "2024-12-17 14:43:25",
   "message": {
     "text": "What is the role of the villager seen in the image?",
     "files": [
       {
         "path": "/tmp/gradio/bd3ef8883b88f81857dfdb68ebbc757024d4fa718e1e0a138e805f27c1cd245a/030-villager.png",
-        "url": "https://0dcd9857c85dea3327.gradio.live/file=/tmp/gradio/bd3ef8883b88f81857dfdb68ebbc757024d4fa718e1e0a138e805f27c1cd245a/030-villager.png",
+        "url": "https://41f9f936d4caaa35ff.gradio.live/file=/tmp/gradio/bd3ef8883b88f81857dfdb68ebbc757024d4fa718e1e0a138e805f27c1cd245a/030-villager.png",
         "size": null,
         "orig_name": "030-villager.png",
         "mime_type": "image/png",
@@ -17,12 +17,12 @@
     ]
   },
   "history": [],
-  "model": "gpt-4o",
-  "model_url": "https://api.openai-proxy.com/v1",
-  "api_key": null,
+  "model": "mc-vsft-sft-llama3_llava_next_8b",
+  "model_url": "http://100.106.93.40:8000/v1",
+  "api_key": "EMPTY",
   "temperature": 0.7,
   "max_output_tokens": 512,
-  "generation": "The villager in the image is from the game Minecraft. This specific villager has no profession, which is indicated by the plain brown robe. Villagers without professions can be assigned roles by placing a workstation block near them.",
+  "generation": "The villager in the image appears to be a farmer. In Minecraft, farmers wear a brown robe and have a straw hat, which is consistent with the villager's appearance. Farmers are responsible for tending to crops and can harvest wheat, carrots, and potatoes. They also have the ability to trade seeds, bread, and other farming-related items.",
   "post_conv": [
     {
       "role": "user",
@@ -41,7 +41,7 @@
     },
     {
       "role": "assistant",
-      "content": "The villager in the image is from the game Minecraft. This specific villager has no profession, which is indicated by the plain brown robe. Villagers without professions can be assigned roles by placing a workstation block near them."
+      "content": "The villager in the image appears to be a farmer. In Minecraft, farmers wear a brown robe and have a straw hat, which is consistent with the villager's appearance. Farmers are responsible for tending to crops and can harvest wheat, carrots, and potatoes. They also have the ability to trade seeds, bread, and other farming-related items."
     }
   ]
 }

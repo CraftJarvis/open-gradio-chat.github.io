@@ -18,7 +18,7 @@
   ],
   "model": "gpt-4o",
   "model_url": "https://api.openai-proxy.com/v1",
-  "api_key": "sk-proj-jglxSPMX2HiVTfGVj6oWT3BlbkFJxqXCjaos13KoJjxswjKy",
+  "api_key": null,
   "temperature": 0.7,
   "max_output_tokens": 512,
   "generation": "A plain brown-robed villager from Minecraft, indicating it currently has no profession.",

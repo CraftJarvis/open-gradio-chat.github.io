@@ -220,7 +220,7 @@ def predict(message, history, model, model_url, api_key, temp, max_output_tokens
         "history": history, 
         "model": model, 
         "model_url": model_url, 
-        "api_key": api_key, 
+        # "api_key": api_key,  # hide the api keys
         "temperature": temp, 
         "max_output_tokens": max_output_tokens,
         "generation": partial_message,
