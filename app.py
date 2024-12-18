@@ -251,7 +251,7 @@ with gr.Blocks(fill_height=True) as demo:
 
             with gr.Accordion("Parameters", open=False) as parameter_row:
                 temp = gr.Slider(minimum=0.0, maximum=1.0, value=0.7, step=0.1, interactive=True, label="Temperature",)
-                max_output_tokens = gr.Slider(minimum=0, maximum=1024, value=512, step=64, interactive=True, label="Max output tokens",)
+                max_output_tokens = gr.Slider(minimum=0, maximum=8196, value=2048, step=128, interactive=True, label="Max output tokens",)
 
             gr.Examples(examples=[
                 {"files":["data/images/007-dark_forest.png"], "text": "What are the red structures visible in the background?"},
