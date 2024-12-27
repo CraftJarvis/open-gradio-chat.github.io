@@ -37,22 +37,35 @@ args = parser.parse_args()
 
 def message_format(message):
     message_content = []
+    # print("message:", message)
     if 'files' in message.keys() and message['files']:
         for msg_file in message['files']:
-            # choice 1: load local image path into base64
-            if 'path' in msg_file.keys() and msg_file['path']:
-                image_base64 = encode_image_base64(msg_file['path'])
-                message_content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}})
-            # choice 2: load url, which is not encouraged
-            elif 'url' in msg_file.keys() and msg_file['url']:
-                # image_base64 = encode_image_base64(msg_file['url'])
-                # message_content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}})
-                message_content.append({"type": "image_url", "image_url": {"url": msg_file['url']}})
-            else:
-                raise ValueError("Invalid file format. Must have a valid path or url.")
+            image_base64 = encode_image_base64(msg_file)
+            message_content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}})
+            # # choice 1: load local image path into base64
+            # if 'path' in msg_file.keys() and msg_file['path']:
+            #     image_base64 = encode_image_base64(msg_file['path'])
+            #     message_content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}})
+            # # choice 2: load url, which is not encouraged
+            # elif 'url' in msg_file.keys() and msg_file['url']:
+            #     # image_base64 = encode_image_base64(msg_file['url'])
+            #     # message_content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}})
+            #     message_content.append({"type": "image_url", "image_url": {"url": msg_file['url']}})
+            # else:
+            #     raise ValueError("Invalid file format. Must have a valid path or url.")
     if 'text' in message.keys() and message['text']:
         message_content.append({"type": "text", "text": message['text']})
     return message_content
+
+def append_history(history, message):
+    # output_history: [{'role': 'user', 'metadata': {'title': None}, 'content': ('/tmp/gradio/e508fa9046b1c35d5cec52b46fc3d1dab59960d4c69f2838491414abd55c0a35/007-dark_forest.png',), 'options': None}, {'role': 'user', 'metadata': {'title': None}, 'content': 'What are the red structures visible in the background?', 'options': None}]
+    # message: {'text': 'What are the red structures visible in the background?', 'files': ['/tmp/gradio/e508fa9046b1c35d5cec52b46fc3d1dab59960d4c69f2838491414abd55c0a35/007-dark_forest.png']}
+    if 'files' in message.keys() and message['files']:
+        for msg_file in message['files']:
+            history.append({"role": "user", "content": (msg_file,)})
+    if 'text' in message.keys() and message['text']:
+        history.append({"role": "user", "content": message['text']})
+    return history
 
 def history_format(history):
     """
@@ -69,10 +82,11 @@ def history_format(history):
     conv_buffer = []
 
     for turn in history:
-        user_message, assistant_message = turn
+        # user_message, assistant_message = turn
 
         # 合并连续的用户消息
-        if user_message:
+        if turn['role'] == 'user':
+            user_message = turn['content'] 
             if isinstance(user_message, str):
                 conv_buffer.append({"role": "user", "content": [{"type": "text", "text": user_message}]})
             elif Path(user_message[0]).is_file():
@@ -80,10 +94,11 @@ def history_format(history):
                 conv_buffer.append({"role": "user", "content": [{"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}]})
             else:
                 raise gr.Error("Can not parse user messages in history! Invalid input string. Must be a valid URL or file path.")
-        if assistant_message:
+        if turn['role'] == 'assistant':
+            assistant_message = turn['content']
             if isinstance(assistant_message, str):
                 conv_buffer.append({"role": "assistant", "content": assistant_message})
-            elif Path(user_message[0]).is_file():
+            elif Path(assistant_message[0]).is_file():
                 continue # skip the assistant image message, the returned image only need to show image 
             else:
                 raise gr.Error("Can not parse assistant messages in history! Invalid input string. Must be a string.")
@@ -130,8 +145,9 @@ def encode_image_base64(image_input) -> str:
         raise ValueError("Unsupported input type. Must be a URL (str) or a local file path (str).")
 
 def predict(message, history, model, model_url, api_key, temp, max_output_tokens, stream):
-    # print("message:", message) # {'text': 'What is the role of the villager seen in the image?', 'files': [{'path': '/tmp/gradio/bd3ef8883b88f81857dfdb68ebbc757024d4fa718e1e0a138e805f27c1cd245a/030-villager.png', 'url': 'https://72721a834ae34c0685.gradio.live/file=/tmp/gradio/bd3ef8883b88f81857dfdb68ebbc757024d4fa718e1e0a138e805f27c1cd245a/030-villager.png', 'size': None, 'orig_name': '030-villager.png', 'mime_type': 'image/png', 'is_stream': False, 'meta': {'_type': 'gradio.FileData'}}]}
-    # print("history:", history) # [[('/tmp/gradio/6d6fecf474fc8192b4738918f0162bc731dfdf04eaf060402aa9a9c5ffe9051d/007-dark_forest.png',), None], ['What are the red structures visible in the background?', 'The red structures in the background are giant mushrooms, commonly found in the Roofed Forest biome in Minecraft.']]
+    original_history = history.copy()
+    print("message:", message) # {'text': 'What is the role of the villager seen in the image?', 'files': [{'path': '/tmp/gradio/bd3ef8883b88f81857dfdb68ebbc757024d4fa718e1e0a138e805f27c1cd245a/030-villager.png', 'url': 'https://72721a834ae34c0685.gradio.live/file=/tmp/gradio/bd3ef8883b88f81857dfdb68ebbc757024d4fa718e1e0a138e805f27c1cd245a/030-villager.png', 'size': None, 'orig_name': '030-villager.png', 'mime_type': 'image/png', 'is_stream': False, 'meta': {'_type': 'gradio.FileData'}}]}
+    print("history:", history) # [[('/tmp/gradio/6d6fecf474fc8192b4738918f0162bc731dfdf04eaf060402aa9a9c5ffe9051d/007-dark_forest.png',), None], ['What are the red structures visible in the background?', 'The red structures in the background are giant mushrooms, commonly found in the Roofed Forest biome in Minecraft.']]
     client = OpenAI(
         api_key=api_key,
         base_url=model_url,
@@ -140,8 +156,8 @@ def predict(message, history, model, model_url, api_key, temp, max_output_tokens
     post_conv = [
         # {"role": "system", "content": "You are a great ai assistant."}
     ]
-    
     post_conv += history_format(history)
+    # post_conv = history
 
     table = Table(show_header=True, header_style="bold magenta")
     table.add_column("Time", style="dim", width=20)
@@ -159,6 +175,7 @@ def predict(message, history, model, model_url, api_key, temp, max_output_tokens
     # [{"role":"user", "content": [{"type": "text", "text": prompt}, {"type": "image_url","image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}]}]
     # Create a chat completion request and send it to the API server
 
+    history = append_history(history, message)
 
     try:
         response = client.chat.completions.create(
@@ -178,32 +195,62 @@ def predict(message, history, model, model_url, api_key, temp, max_output_tokens
         if stream:
             # Read and return generated text from response stream
             partial_message = ""
+            history.append({"role": "assistant", "content": partial_message})
             for chunk in response:
                 try:
                     partial_message += (chunk.choices[0].delta.content or "")
-                    # history.append(
-                    #     ChatMessage(
-                    #         role="assistant", content=partial_message
-                    #     )
-                    # )
                 except:
                     pass
-                # yield history
+                history[-1]["content"] = partial_message
+                yield "", history
                 yield partial_message
+                # yield partial_message
+                # return_msg["content"] = {"type": "text", "text": partial_message}
+                # yield return_msg
+                # return_msg.append({"type": "text", "text": partial_message})
         else:
             partial_message = response.choices[0].message.content
+            history.append({"role":"assistant", "content": partial_message})
+            yield "", history
             # Read and return generated text from response stream
-            yield partial_message
+            # yield partial_message
+            # return_msg["content"] = {"type": "text", "text": partial_message}
+            # yield return_msg
             # history.append(
             #     ChatMessage(
             #         role="assistant", content=partial_message
             #     )
             # )
             # yield history   
+            # return_msg.append({"type": "text", "text": partial_message})
     except Exception as e:
         raise gr.Error(str(e))
-    
+
     post_conv.append({"role": "assistant", "content": partial_message})
+    
+    # test show tool or thought
+    # if True:
+    #     history.append({
+    #         "role":"assistant",
+    #         "content":"The weather API says it is 20 degrees Celcius in New York.",
+    #         "metadata":{"title": "🛠️ Used tool Weather API"}
+    #     })
+    #     yield "", history
+
+    # test embed image
+    # if True:
+    #     # Embed the quaterly sales report in the chat
+    #     history.append(
+    #         {"role": "assistant", "content":{"path": "data/images/007-dark_forest.png", "alt_text": "dark forest"}}
+    #     )
+    #     yield "", history
+
+    # # test embed some file 
+    # if True:
+    #     history.append(
+    #         {"role": "assistant", "content":{"path": "todo.md", "alt_text": "To DO Markdown"}}
+    #     )
+    #     yield "", history
     
     # save the conversation to a json file
     folder = os.path.join("logs", datetime.now().strftime("%Y-%m-%d"))
@@ -213,7 +260,7 @@ def predict(message, history, model, model_url, api_key, temp, max_output_tokens
     log_data = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "message": message, 
-        "history": history, 
+        "history": original_history, 
         "model": model, 
         "model_url": model_url, 
         # "api_key": api_key,  # hide the api keys
@@ -226,8 +273,15 @@ def predict(message, history, model, model_url, api_key, temp, max_output_tokens
         json.dump(log_data, f, indent=2)
 
     # 添加数据行
-    table.add_row(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), model, str(history), str(message), partial_message)
+    table.add_row(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), model, str(original_history), str(message), partial_message)
     console.print(table)
+    # print("history:", history)
+    # import ipdb; ipdb.set_trace()
+    return "", history
+
+def like(evt: gr.LikeData):
+    print("User liked the response")
+    print(evt.index, evt.liked, evt.value)
 
 multimodaltextbox = gr.MultimodalTextbox()
 with gr.Blocks(fill_height=True) as demo:
@@ -257,9 +311,16 @@ with gr.Blocks(fill_height=True) as demo:
             ], inputs=multimodaltextbox)
 
         with gr.Column(scale=8):
-            chatbot = gr.Chatbot(height=650)
+            chatbot = gr.Chatbot(
+                height=650, 
+                type="messages", 
+                show_copy_button=True,
+                # additional_inputs=[model, model_url, api_key, temp, max_output_tokens, stream],
+                # fill_height=True
+                )
             multimodaltextbox.render()
-            gr.ChatInterface(predict, chatbot=chatbot, textbox=multimodaltextbox, multimodal=True,
-                            additional_inputs=[model, model_url, api_key, temp, max_output_tokens, stream], fill_height=True)
+            # gr.ChatInterface(predict, type="messages", chatbot=chatbot, textbox=multimodaltextbox, multimodal=True, additional_inputs=[model, model_url, api_key, temp, max_output_tokens, stream], fill_height=True)
+            multimodaltextbox.submit(predict, [multimodaltextbox, chatbot, model, model_url, api_key, temp, max_output_tokens, stream], [multimodaltextbox, chatbot])
+            chatbot.like(like)
 
 demo.queue().launch(server_name=args.host, server_port=args.port, share=True)
