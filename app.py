@@ -13,6 +13,8 @@ from datetime import datetime
 import json 
 import os 
 
+from gradio import ChatMessage
+
 console = Console()
 
 # with open("configs/gradio/vision_language_model.yaml", "r") as file:
@@ -81,6 +83,8 @@ def history_format(history):
         if assistant_message:
             if isinstance(assistant_message, str):
                 conv_buffer.append({"role": "assistant", "content": assistant_message})
+            elif Path(user_message[0]).is_file():
+                continue # skip the assistant image message, the returned image only need to show image 
             else:
                 raise gr.Error("Can not parse assistant messages in history! Invalid input string. Must be a string.")
     
@@ -124,34 +128,8 @@ def encode_image_base64(image_input) -> str:
     # Raise an error if the input type is unsupported
     else:
         raise ValueError("Unsupported input type. Must be a URL (str) or a local file path (str).")
-    
-class TextGenerator:
-    def __init__(self):
-        self.full_output = ""
 
-    def generate_streamed_text(self):
-        try:
-            stream = client.chat.completions.create(
-                model=model,  # Model name to use
-                messages=post_conv,  # Chat history
-                temperature=temp,  # Temperature for text generation
-                stream=True,  # Stream response
-                max_tokens = max_output_tokens
-            )
-
-            # Read and return generated text from response stream
-            partial_message = ""
-            for chunk in stream:
-                try:
-                    partial_message += (chunk.choices[0].delta.content or "")
-                    self.full_output += (chunk.choices[0].delta.content or "")  # 缓存完整内容
-                except:
-                    pass
-                yield partial_message
-        except Exception as e:
-            raise gr.Error(str(e))
-
-def predict(message, history, model, model_url, api_key, temp, max_output_tokens):
+def predict(message, history, model, model_url, api_key, temp, max_output_tokens, stream):
     # print("message:", message) # {'text': 'What is the role of the villager seen in the image?', 'files': [{'path': '/tmp/gradio/bd3ef8883b88f81857dfdb68ebbc757024d4fa718e1e0a138e805f27c1cd245a/030-villager.png', 'url': 'https://72721a834ae34c0685.gradio.live/file=/tmp/gradio/bd3ef8883b88f81857dfdb68ebbc757024d4fa718e1e0a138e805f27c1cd245a/030-villager.png', 'size': None, 'orig_name': '030-villager.png', 'mime_type': 'image/png', 'is_stream': False, 'meta': {'_type': 'gradio.FileData'}}]}
     # print("history:", history) # [[('/tmp/gradio/6d6fecf474fc8192b4738918f0162bc731dfdf04eaf060402aa9a9c5ffe9051d/007-dark_forest.png',), None], ['What are the red structures visible in the background?', 'The red structures in the background are giant mushrooms, commonly found in the Roofed Forest biome in Minecraft.']]
     client = OpenAI(
@@ -180,12 +158,14 @@ def predict(message, history, model, model_url, api_key, temp, max_output_tokens
     # official openai chat template is 
     # [{"role":"user", "content": [{"type": "text", "text": prompt}, {"type": "image_url","image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}]}]
     # Create a chat completion request and send it to the API server
+
+
     try:
-        stream = client.chat.completions.create(
+        response = client.chat.completions.create(
             model=model,  # Model name to use
             messages=post_conv,  # Chat history
             temperature=temp,  # Temperature for text generation
-            stream=True,  # Stream response
+            stream=stream,  # Stream response
             max_tokens = max_output_tokens,
             # extra_body={
             #     'repetition_penalty':
@@ -194,16 +174,32 @@ def predict(message, history, model, model_url, api_key, temp, max_output_tokens
             #         int(id.strip()) for id in args.stop_token_ids.split(',')
             #         if id.strip()
             #     ] if args.stop_token_ids else []}
-            )
-
-        # Read and return generated text from response stream
-        partial_message = ""
-        for chunk in stream:
-            try:
-                partial_message += (chunk.choices[0].delta.content or "")
-            except:
-                pass
+        )
+        if stream:
+            # Read and return generated text from response stream
+            partial_message = ""
+            for chunk in response:
+                try:
+                    partial_message += (chunk.choices[0].delta.content or "")
+                    # history.append(
+                    #     ChatMessage(
+                    #         role="assistant", content=partial_message
+                    #     )
+                    # )
+                except:
+                    pass
+                # yield history
+                yield partial_message
+        else:
+            partial_message = response.choices[0].message.content
+            # Read and return generated text from response stream
             yield partial_message
+            # history.append(
+            #     ChatMessage(
+            #         role="assistant", content=partial_message
+            #     )
+            # )
+            # yield history   
     except Exception as e:
         raise gr.Error(str(e))
     
@@ -233,9 +229,6 @@ def predict(message, history, model, model_url, api_key, temp, max_output_tokens
     table.add_row(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), model, str(history), str(message), partial_message)
     console.print(table)
 
-    
-
-
 multimodaltextbox = gr.MultimodalTextbox()
 with gr.Blocks(fill_height=True) as demo:
     with gr.Row():
@@ -252,6 +245,9 @@ with gr.Blocks(fill_height=True) as demo:
             with gr.Accordion("Parameters", open=False) as parameter_row:
                 temp = gr.Slider(minimum=0.0, maximum=1.0, value=0.7, step=0.1, interactive=True, label="Temperature",)
                 max_output_tokens = gr.Slider(minimum=0, maximum=8196, value=2048, step=128, interactive=True, label="Max output tokens",)
+                # gradio checkbox for stream mode or not 
+                stream = gr.Checkbox(label="Streaming", value = False)
+
 
             gr.Examples(examples=[
                 {"files":["data/images/007-dark_forest.png"], "text": "What are the red structures visible in the background?"},
@@ -264,6 +260,6 @@ with gr.Blocks(fill_height=True) as demo:
             chatbot = gr.Chatbot(height=650)
             multimodaltextbox.render()
             gr.ChatInterface(predict, chatbot=chatbot, textbox=multimodaltextbox, multimodal=True,
-                            additional_inputs=[model, model_url, api_key, temp, max_output_tokens], fill_height=True)
+                            additional_inputs=[model, model_url, api_key, temp, max_output_tokens, stream], fill_height=True)
 
 demo.queue().launch(server_name=args.host, server_port=args.port, share=True)

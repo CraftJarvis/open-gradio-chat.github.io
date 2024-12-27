@@ -1,0 +1,28 @@
+{
+  "timestamp": "2024-12-18 09:31:05",
+  "message": {
+    "text": " hellko",
+    "files": []
+  },
+  "history": [],
+  "model": "mc-vsft-sft-llama3_llava_next_8b",
+  "model_url": "http://100.106.93.40:8000/v1",
+  "temperature": 0,
+  "max_output_tokens": 2048,
+  "generation": "I'm sorry, but I don't understand what you mean by \"hellko.\" Could you please provide more context or clarify your question? This will help me provide a more accurate and relevant response.",
+  "post_conv": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": " hellko"
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": "I'm sorry, but I don't understand what you mean by \"hellko.\" Could you please provide more context or clarify your question? This will help me provide a more accurate and relevant response."
+    }
+  ]
+}
