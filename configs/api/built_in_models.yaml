@@ -1,0 +1,6 @@
+base_urls:
+    - https://api.openai.com/v1
+    - https://api.openai-proxy.com/v1
+
+models:
+    - gpt-4o-mini

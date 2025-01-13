@@ -2,38 +2,16 @@ import yaml
 import argparse
 import gradio as gr
 from openai import OpenAI
-import requests
-import base64
 from pathlib import Path
-
 from rich.console import Console
 from rich.table import Table
-
 from datetime import datetime
 import json 
 import os 
-
 from gradio import ChatMessage
+from utils import encode_image_base64
 
 console = Console()
-
-# with open("configs/gradio/vision_language_model.yaml", "r") as file:
-#     models = yaml.safe_load(file)['model']
-
-# model_names = list(models.keys())
-
-# Argument parser setup
-parser = argparse.ArgumentParser(
-    description='Chatbot Interface with Customizable Parameters')
-parser.add_argument('--stop-token-ids',
-                    type=str,
-                    default='',
-                    help='Comma-separated stop token IDs')
-parser.add_argument("--host", type=str, default='localhost')
-parser.add_argument("--port", type=int, default=10001)
-
-# Parse the arguments
-args = parser.parse_args()
 
 def message_format(message):
     message_content = []
@@ -58,8 +36,12 @@ def message_format(message):
     return message_content
 
 def append_history(history, message):
-    # output_history: [{'role': 'user', 'metadata': {'title': None}, 'content': ('/tmp/gradio/e508fa9046b1c35d5cec52b46fc3d1dab59960d4c69f2838491414abd55c0a35/007-dark_forest.png',), 'options': None}, {'role': 'user', 'metadata': {'title': None}, 'content': 'What are the red structures visible in the background?', 'options': None}]
-    # message: {'text': 'What are the red structures visible in the background?', 'files': ['/tmp/gradio/e508fa9046b1c35d5cec52b46fc3d1dab59960d4c69f2838491414abd55c0a35/007-dark_forest.png']}
+    '''
+    - output_history: 
+    [{'role': 'user', 'metadata': {'title': None}, 'content': ('/tmp/gradio/e508fa9046b1c35d5cec52b46fc3d1dab59960d4c69f2838491414abd55c0a35/007-dark_forest.png',), 'options': None}, {'role': 'user', 'metadata': {'title': None}, 'content': 'What are the red structures visible in the background?', 'options': None}]
+    - message: 
+    {'text': 'What are the red structures visible in the background?', 'files': ['/tmp/gradio/e508fa9046b1c35d5cec52b46fc3d1dab59960d4c69f2838491414abd55c0a35/007-dark_forest.png']}
+    '''
     if 'files' in message.keys() and message['files']:
         for msg_file in message['files']:
             history.append({"role": "user", "content": (msg_file,)})
@@ -113,41 +95,17 @@ def history_format(history):
     return formatted_conversation
 
 
-def encode_image_base64(image_input) -> str:
-    """
-    Encode an image to base64 format.
-    Supports: URL, local file path, 
-    Args:
-        image_input (str | np.ndarray | PIL.Image.Image): Input image in different formats.
-
-    Returns:
-        str: Base64-encoded string of the image.
-    """
-    # Case 1: If the input is a URL (str)
-    if isinstance(image_input, str):
-        if image_input.startswith('http://') or image_input.startswith('https://'):
-            try:
-                response = requests.get(image_input)
-                response.raise_for_status()
-                return base64.b64encode(response.content).decode('utf-8')
-            except requests.exceptions.RequestException as e:
-                raise ValueError(f"Failed to retrieve the image from the URL: {e}")
-        elif Path(image_input).is_file():  # Local file path
-            try:
-                with open(image_input, 'rb') as file:
-                    return base64.b64encode(file.read()).decode('utf-8')
-            except Exception as e:
-                raise ValueError(f"Failed to read image file: {e}")
-        else:
-            raise ValueError("Invalid input string. Must be a valid URL or file path.")
-    # Raise an error if the input type is unsupported
-    else:
-        raise ValueError("Unsupported input type. Must be a URL (str) or a local file path (str).")
 
 def predict(message, history, model, model_url, api_key, temp, max_output_tokens, stream):
+    '''
+    - message:
+    {'text': 'What is the role of the villager seen in the image?', 'files': [{'path': '/tmp/gradio/bd3ef8883b88f81857dfdb68ebbc757024d4fa718e1e0a138e805f27c1cd245a/030-villager.png', 'url': 'https://72721a834ae34c0685.gradio.live/file=/tmp/gradio/bd3ef8883b88f81857dfdb68ebbc757024d4fa718e1e0a138e805f27c1cd245a/030-villager.png', 'size': None, 'orig_name': '030-villager.png', 'mime_type': 'image/png', 'is_stream': False, 'meta': {'_type': 'gradio.FileData'}}]}
+    - history:
+    [[('/tmp/gradio/6d6fecf474fc8192b4738918f0162bc731dfdf04eaf060402aa9a9c5ffe9051d/007-dark_forest.png',), None], ['What are the red structures visible in the background?', 'The red structures in the background are giant mushrooms, commonly found in the Roofed Forest biome in Minecraft.']]
+    '''
     original_history = history.copy()
-    print("message:", message) # {'text': 'What is the role of the villager seen in the image?', 'files': [{'path': '/tmp/gradio/bd3ef8883b88f81857dfdb68ebbc757024d4fa718e1e0a138e805f27c1cd245a/030-villager.png', 'url': 'https://72721a834ae34c0685.gradio.live/file=/tmp/gradio/bd3ef8883b88f81857dfdb68ebbc757024d4fa718e1e0a138e805f27c1cd245a/030-villager.png', 'size': None, 'orig_name': '030-villager.png', 'mime_type': 'image/png', 'is_stream': False, 'meta': {'_type': 'gradio.FileData'}}]}
-    print("history:", history) # [[('/tmp/gradio/6d6fecf474fc8192b4738918f0162bc731dfdf04eaf060402aa9a9c5ffe9051d/007-dark_forest.png',), None], ['What are the red structures visible in the background?', 'The red structures in the background are giant mushrooms, commonly found in the Roofed Forest biome in Minecraft.']]
+    print("message:", message) 
+    print("history:", history)  
     client = OpenAI(
         api_key=api_key,
         base_url=model_url,
@@ -158,13 +116,6 @@ def predict(message, history, model, model_url, api_key, temp, max_output_tokens
     ]
     post_conv += history_format(history)
     # post_conv = history
-
-    table = Table(show_header=True, header_style="bold magenta")
-    table.add_column("Time", style="dim", width=20)
-    table.add_column("Model", style="dim", width=10)
-    table.add_column("History", style="dim", width=30)
-    table.add_column("Message", style="dim", width=20)
-    table.add_column("Generation", style="dim", width=20)
 
     formatted_message = message_format(message)
     post_conv.append({"role": "user", "content": formatted_message})
@@ -184,6 +135,7 @@ def predict(message, history, model, model_url, api_key, temp, max_output_tokens
             temperature=temp,  # Temperature for text generation
             stream=stream,  # Stream response
             max_tokens = max_output_tokens,
+            extra_body = {'skip_special_tokens': False},
             # extra_body={
             #     'repetition_penalty':
             #     1,
@@ -192,6 +144,7 @@ def predict(message, history, model, model_url, api_key, temp, max_output_tokens
             #         if id.strip()
             #     ] if args.stop_token_ids else []}
         )
+        
         if stream:
             # Read and return generated text from response stream
             partial_message = ""
@@ -203,26 +156,26 @@ def predict(message, history, model, model_url, api_key, temp, max_output_tokens
                     pass
                 history[-1]["content"] = partial_message
                 yield "", history
-                yield partial_message
-                # yield partial_message
-                # return_msg["content"] = {"type": "text", "text": partial_message}
-                # yield return_msg
-                # return_msg.append({"type": "text", "text": partial_message})
         else:
             partial_message = response.choices[0].message.content
             history.append({"role":"assistant", "content": partial_message})
             yield "", history
-            # Read and return generated text from response stream
-            # yield partial_message
-            # return_msg["content"] = {"type": "text", "text": partial_message}
-            # yield return_msg
-            # history.append(
-            #     ChatMessage(
-            #         role="assistant", content=partial_message
-            #     )
-            # )
-            # yield history   
-            # return_msg.append({"type": "text", "text": partial_message})
+        
+        # test show tool or image
+        if True: # show point?
+            from utils import show_point
+            obj_name, points, image_path = show_point(model, history)
+            #     history.append({
+            #         "role":"assistant",
+            #         "content":"The weather API says it is 20 degrees Celcius in New York.",
+            #         "metadata":{"title": "🛠️ Used tool Weather API"}
+            #     })
+            #     yield "", history
+            if obj_name is not None:
+                history[-1]["metadata"] = {"title": f"{obj_name} {str(points)}"}
+                history.append({"role": "assistant", "content":{"path": image_path, "alt_text": obj_name}})
+                yield "", history
+
     except Exception as e:
         raise gr.Error(str(e))
 
@@ -272,8 +225,22 @@ def predict(message, history, model, model_url, api_key, temp, max_output_tokens
     with open(file_path, "w") as f:
         json.dump(log_data, f, indent=2)
 
+    # 创建 table
+    table = Table(show_header=True, show_lines=True, header_style="bold magenta")
+    # table.add_column("Time", style="dim", width=20)
+    # table.add_column("Model", style="dim", width=10)
+    # table.add_column("History", style="dim", width=30)
+    # table.add_column("Message", style="dim", width=20)
+    # table.add_column("Generation", style="dim", width=20)
+    table.add_column("Name", style="dim", width=20)
+    table.add_column("Value", style="dim", width=80)
     # 添加数据行
-    table.add_row(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), model, str(original_history), str(message), partial_message)
+    # table.add_row(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), model, str(original_history), str(message), partial_message)
+    table.add_row("Time", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    table.add_row("Model", model)
+    table.add_row("History", str(original_history))
+    table.add_row("Message", str(message))
+    table.add_row("Generation", partial_message)
     console.print(table)
     # print("history:", history)
     # import ipdb; ipdb.set_trace()
@@ -282,6 +249,20 @@ def predict(message, history, model, model_url, api_key, temp, max_output_tokens
 def like(evt: gr.LikeData):
     print("User liked the response")
     print(evt.index, evt.liked, evt.value)
+
+# Argument parser setup
+parser = argparse.ArgumentParser(description='Chatbot Interface with Customizable Parameters')
+parser.add_argument('--stop-token-ids',
+                    type=str,
+                    default='',
+                    help='Comma-separated stop token IDs')
+parser.add_argument("--host", type=str, default='localhost')
+parser.add_argument("--port", type=int, default=10001)
+parser.add_argument("--default_model", type=str, default="gpt-4o")
+parser.add_argument("--default_model_url", type=str, default="https://api.openai.com/v1")
+parser.add_argument("--default_api_key", type=str, default="EMPTY")
+# Parse the arguments
+args = parser.parse_args()
 
 multimodaltextbox = gr.MultimodalTextbox()
 with gr.Blocks(fill_height=True) as demo:
@@ -292,9 +273,9 @@ with gr.Blocks(fill_height=True) as demo:
             #     value=model_names[0] if len(model_names) > 0 else "",
             #     interactive=True,
             #     label="Model")
-            model = gr.Textbox(value="gpt-4o", label="Model name")
-            model_url = gr.Textbox(value="https://api.openai.com/v1", label="Model URL")
-            api_key = gr.Textbox(value="EMPTY", label="API Key", type="password")
+            model = gr.Textbox(value=args.default_model, label="Model name")
+            model_url = gr.Textbox(value=args.default_model_url, label="Model URL")
+            api_key = gr.Textbox(value=args.default_api_key, label="API Key", type="password")
 
             with gr.Accordion("Parameters", open=False) as parameter_row:
                 temp = gr.Slider(minimum=0.0, maximum=1.0, value=0.7, step=0.1, interactive=True, label="Temperature",)
@@ -302,13 +283,43 @@ with gr.Blocks(fill_height=True) as demo:
                 # gradio checkbox for stream mode or not 
                 stream = gr.Checkbox(label="Streaming", value = False)
 
+            with gr.Accordion("Examples", open=False) as conv_examples:
+                gr.Examples(examples=[
+                    {"files":[], "text": "Can diamond be mined with a stone pickaxe in Minecraft?"}, 
+                    {"files":[], "text": "Give you nothing in the inventory, generate a step-by-step plan to obtain diamonds."},
+                    {"files":[], "text": "What is the recipe for the enchanting table in Minecraft?"},
+                ], inputs=multimodaltextbox, label="Chat")
 
-            gr.Examples(examples=[
-                {"files":["data/images/007-dark_forest.png"], "text": "What are the red structures visible in the background?"},
-                {"files":["data/images/030-villager.png"], "text": "What is the role of the villager seen in the image?"},
-                {"files":["data/images/038-inventory.png"], "text": "What type of armor is the player wearing?"},
-                {"files":[], "text": "Give you nothing in the inventory, generate a step-by-step plan to obtain diamonds."},
-            ], inputs=multimodaltextbox)
+                gr.Examples(examples=[
+                    {"files":["data/images/007-dark_forest.png"], "text": "What are the red structures visible in the background?"},
+                    {"files":["data/images/030-villager.png"], "text": "What is the role of the villager seen in the image?"},
+                    {"files":["data/images/038-inventory.png"], "text": "What type of armor is the player wearing?"},
+                ], inputs=multimodaltextbox, label="Visual Question Answering")
+
+                gr.Examples(examples=[
+                    {"files":["data/images/004-forest.png"], "text": "Caption the image and answer what biome is this."},
+                    {"files":["data/images/042-ender_dragen.png"], "text": "Caption this image in details."},
+                    {"files":["data/images/033-enderman.png"], "text": "Caption this image."},
+                ], inputs=multimodaltextbox, label="Visual Captioning")
+
+                gr.Examples(examples=[
+                    {"files":["data/images/005-diamond_ore.png"], "text": "Pinpoint the diamond ore."},
+                    {"files":["data/images/009-pig.png"], "text": "Pinpoint the pig."},
+                    {"files":["data/images/035-cow.png"], "text": "Pinpoint the cow."},
+                    {"files":["data/images/045-crafting.png"], "text": "Pinpoint the oak_planks."},
+                    {"files":["data/images/023-chicken.png"], "text": "Pinpoint the chicken."},
+                    {"files":["data/images/014-inventory.png"], "text": "Pinpoint the oak_log."},
+                ], inputs=multimodaltextbox, label="Visual Grounding")
+
+
+
+
+
+
+                # gr.Examples(examples=[
+                #     {"files":["data/images/007-dark_forest.png","data/images/030-villager.png", "data/images/038-inventory.png"], "text": "Caption the Minecraft images."},
+                # ], inputs=multimodaltextbox, label="Multi Image Chat")
+
 
         with gr.Column(scale=8):
             chatbot = gr.Chatbot(
