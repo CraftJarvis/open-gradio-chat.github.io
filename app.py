@@ -165,14 +165,16 @@ def predict(message, history, model, model_url, api_key, temp, max_output_tokens
         if True: # show point?
             from utils import show_point
             obj_name, points, image_path = show_point(model, history)
-            #     history.append({
-            #         "role":"assistant",
-            #         "content":"The weather API says it is 20 degrees Celcius in New York.",
-            #         "metadata":{"title": "🛠️ Used tool Weather API"}
-            #     })
-            #     yield "", history
             if obj_name is not None:
                 history[-1]["metadata"] = {"title": f"{obj_name} {str(points)}"}
+                history.append({"role": "assistant", "content":{"path": image_path, "alt_text": obj_name}})
+                yield "", history
+
+        if True:
+            from utils import show_box
+            obj_name, boxes, image_path = show_box(model, history)
+            if obj_name is not None:
+                history[-1]["metadata"] = {"title": f"{obj_name} {str(boxes)}"}
                 history.append({"role": "assistant", "content":{"path": image_path, "alt_text": obj_name}})
                 yield "", history
 
@@ -309,9 +311,14 @@ with gr.Blocks(fill_height=True) as demo:
                     {"files":["data/images/045-crafting.png"], "text": "Pinpoint the oak_planks."},
                     {"files":["data/images/023-chicken.png"], "text": "Pinpoint the chicken."},
                     {"files":["data/images/014-inventory.png"], "text": "Pinpoint the oak_log."},
-                ], inputs=multimodaltextbox, label="Visual Grounding")
+                ], inputs=multimodaltextbox, label="Visual Point Grounding")
 
-
+                gr.Examples(examples=[
+                    {"files":["data/images/005-diamond_ore.png"], "text": "Please provide the bounding box coordinate of the region this sentence describes: diamond_ore."},
+                    {"files":["data/images/009-pig.png"], "text": "Please provide the bounding box coordinate of the region this sentence describes: pig."},
+                    {"files":["data/images/035-cow.png"], "text": "Please provide the bounding box coordinate of the region this sentence describes: cow."},
+                    {"files":["data/images/045-crafting.png"], "text": "Please provide the bounding box coordinate of the region this sentence describes: recipe_book."},
+                ], inputs=multimodaltextbox, label="Visual Box Grounding")
 
 
 
