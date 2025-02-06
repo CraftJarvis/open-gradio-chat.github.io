@@ -1,0 +1,28 @@
+{
+  "timestamp": "2024-12-18 09:31:20",
+  "message": {
+    "text": "\u6211\u7684\u4e16\u754c\u662f\u4ec0\u4e48\uff1f",
+    "files": []
+  },
+  "history": [],
+  "model": "mc-vsft-sft-llama3_llava_next_8b",
+  "model_url": "http://100.106.93.40:8000/v1",
+  "temperature": 0,
+  "max_output_tokens": 2048,
+  "generation": "\u6211\u4e0d\u77e5\u9053\u4f60\u6240\u6307\u7684 \"\u6211\u7684\u4e16\u754c\" \u662f\u4ec0\u4e48\u3002\u8bf7\u63d0\u4f9b\u66f4\u591a\u4e0a\u4e0b\u6587\u6216\u8be6\u7ec6\u4fe1\u606f\uff0c\u6211\u5c06\u5c3d\u529b\u56de\u7b54\u4f60\u7684\u95ee\u9898\u3002",
+  "post_conv": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "\u6211\u7684\u4e16\u754c\u662f\u4ec0\u4e48\uff1f"
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": "\u6211\u4e0d\u77e5\u9053\u4f60\u6240\u6307\u7684 \"\u6211\u7684\u4e16\u754c\" \u662f\u4ec0\u4e48\u3002\u8bf7\u63d0\u4f9b\u66f4\u591a\u4e0a\u4e0b\u6587\u6216\u8be6\u7ec6\u4fe1\u606f\uff0c\u6211\u5c06\u5c3d\u529b\u56de\u7b54\u4f60\u7684\u95ee\u9898\u3002"
+    }
+  ]
+}

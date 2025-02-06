@@ -1,0 +1,20 @@
+{
+  "timestamp": "2024-12-27 07:23:04",
+  "message": {
+    "text": "What is the role of the villager seen in the image?",
+    "files": [
+      {
+        "path": "/tmp/gradio/bd3ef8883b88f81857dfdb68ebbc757024d4fa718e1e0a138e805f27c1cd245a/030-villager.png",
+        "url": "https://3d18ee399ebffc02eb.gradio.live/file=/tmp/gradio/bd3ef8883b88f81857dfdb68ebbc757024d4fa718e1e0a138e805f27c1cd245a/030-villager.png",
+        "size": null,
+        "orig_name": "030-villager.png",
+        "mime_type": "image/png",
+        "is_stream": false,
+        "meta": {
+          "_type": "gradio.FileData"
+        }
+      }
+    ]
+  },
+  "history": [
+    

@@ -1,0 +1,50 @@
+{
+  "timestamp": "2024-12-18 16:05:54",
+  "message": {
+    "text": "hello",
+    "files": []
+  },
+  "history": [
+    [
+      "hello",
+      null
+    ],
+    [
+      "hello",
+      null
+    ]
+  ],
+  "model": "claude-3-5-sonnet-20241022",
+  "model_url": "https://api.dwyu.top/v1",
+  "temperature": 0.7,
+  "max_output_tokens": 2048,
+  "generation": "",
+  "post_conv": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "hello"
+        },
+        {
+          "type": "text",
+          "text": "hello"
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "hello"
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": ""
+    }
+  ]
+}
