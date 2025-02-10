@@ -12,6 +12,11 @@ from utils import encode_image_base64
 
 console = Console()
 
+ENABLE_THINKING = True
+ENABLE_POINT_GROUDING = True
+ENABLE_BOX_GROUDING = True
+ENABLE_GROUNDING = True
+
 def message_format(message):
     message_content = []
     # print("message:", message)
@@ -168,13 +173,15 @@ def predict(message, history, model_name, model_url, api_key, temp, max_output_t
                 except:
                     pass
                 history[-1]["content"] = partial_message
+                if ENABLE_THINKING:
+                    history[-1]["content"] = history[-1]["content"].replace("<think>", "&lt;think&gt;").replace("</think>", "&lt;/think&gt;")
                 yield "", history
         else:
             partial_message = response.choices[0].message.content
             history.append({"role":"assistant", "content": partial_message})
             yield "", history
         
-        if True: # show thought
+        if ENABLE_THINKING: # show thought
             from utils import extract_thought
             thought_content, response_content = extract_thought(partial_message)
             if thought_content:
@@ -189,25 +196,34 @@ def predict(message, history, model_name, model_url, api_key, temp, max_output_t
                     "content":response_content
                 })
                 yield "", history
-        
-        if True: # show point?
-            from utils import show_point
-            # obj_name, points, image_path = show_point(model_name, history)
-            image_path = show_point(model_name, history)
-            if image_path is not None:
-                history[-1]["metadata"] = {"title": "🎨 Grounding Point"}
-                # history[-1]["content"] = gr.HTML(history[-1]["content"])
-                history.append({"role": "assistant", "content":{"path": image_path}})
+
+        if ENABLE_GROUNDING:
+            point_image_path = None
+            if ENABLE_POINT_GROUDING: # show point?
+                from utils import show_point
+                # obj_name, points, image_path = show_point(model_name, history)
+                point_image_path = show_point(model_name, history)
+
+            box_image_path = None
+            if ENABLE_BOX_GROUDING:
+                from utils import show_box
+                # obj_name, boxes, image_path = show_box(model_name, history)
+                box_image_path = show_box(model_name, history)
+            
+            if box_image_path is not None:
+                history[-1]["metadata"] = {"title": "🎨 Grounding Box"}
+                history.append({"role": "assistant", "content":{"path": box_image_path}})
                 yield "", history
 
-        if True:
-            from utils import show_box
-            # obj_name, boxes, image_path = show_box(model_name, history)
-            image_path = show_box(model_name, history)
-            if image_path is not None:
-                history[-1]["metadata"] = {"title": "🎨 Grounding Box"}
-                history.append({"role": "assistant", "content":{"path": image_path}})
+            if point_image_path is not None:
+                if 'molmo-' in model_name:
+                    history[-1]["content"] = f"```html\n{history[-1]['content']}\n```"
+                history[-1]["metadata"] = {"title": "🎨 Grounding Point"}
+                # history[-1]["content"] = gr.HTML(history[-1]["content"])
+                history.append({"role": "assistant", "content":{"path": point_image_path}})
                 yield "", history
+
+        
 
     except Exception as e:
         raise gr.Error(str(e))
@@ -275,5 +291,5 @@ def like(evt: gr.LikeData):
     print(evt.index, evt.liked, evt.value)
 
 def select_model_change(model):
-    print("model:", model)
+    print("select model:", model)
     return model['model_name'], model['base_url']

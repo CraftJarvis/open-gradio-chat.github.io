@@ -8,8 +8,8 @@ from func import predict, re_generate, remove_last_turn, like, select_model_chan
 # Argument parser setup
 parser = argparse.ArgumentParser(description='Chatbot Interface with Customizable Parameters')
 parser.add_argument('--stop-token-ids', type=str, default='', help='Comma-separated stop token IDs')
-parser.add_argument("--host", type=str, default='localhost')
-parser.add_argument("--port", type=int, default=10001)
+parser.add_argument("--host", type=str, default='0.0.0.0')
+parser.add_argument("--port", type=int, default=8101)
 parser.add_argument("--default_model", type=str, default="deepseek-r1-distill-qwen-32b")
 parser.add_argument("--default_model_url", type=str, default="http://100.107.154.21:12000/v1")
 parser.add_argument("--default_api_key", type=str, default="EMPTY")
@@ -42,7 +42,7 @@ def load_models_from_yaml(path):
         raise ValueError(f"Invalid path: {path}")
                     
 
-multimodaltextbox = gr.MultimodalTextbox()
+multimodaltextbox = gr.MultimodalTextbox(label="Submit your message here")
 with gr.Blocks(fill_height=True, theme=gr.themes.Ocean()) as demo:
     with gr.Row():
         with gr.Column(scale=3):
@@ -63,7 +63,7 @@ with gr.Blocks(fill_height=True, theme=gr.themes.Ocean()) as demo:
                 max_output_tokens = gr.Slider(minimum=0, maximum=8196, value=2048, step=128, interactive=True, label="Max output tokens",)
                 # repetition_penalty = gr.Slider(minimum=0.0, maximum=1.0, value=1.0, step=0.1, interactive=True, label="Repetition penalty (future)",)
                 # gradio checkbox for stream mode or not 
-                stream = gr.Checkbox(label="Streaming", value = False)
+                stream = gr.Checkbox(label="Streaming", value = True)
 
             system_prompt = gr.Textbox(value="You are a helpful assistant that can answer questions and help with tasks in Minecraft.", label="System Prompt (support in the future)", lines = 4)
 
@@ -90,7 +90,7 @@ with gr.Blocks(fill_height=True, theme=gr.themes.Ocean()) as demo:
                 # # add a button to download the conversation
                 # download = gr.Button(value = "📥 Download")
                 # add a button to remove the last run
-                remove_last = gr.Button(value = "🧹  Remove Last Turn")
+                remove_last = gr.Button(value = "🧺  Remove Last Turn")
                 remove_last.click(remove_last_turn, inputs=[chatbot], outputs=[chatbot])
                 # add a clear button to clear the chatbot
                 clear = gr.ClearButton([multimodaltextbox, chatbot], value="🗑  Clear History", )
@@ -102,6 +102,7 @@ with gr.Blocks(fill_height=True, theme=gr.themes.Ocean()) as demo:
                 {"files":[], "text": "Can diamond be mined with a stone pickaxe in Minecraft?"}, 
                 {"files":[], "text": "Give you nothing in the inventory, generate a step-by-step plan to obtain diamonds."},
                 {"files":[], "text": "What is the recipe for the enchanting table in Minecraft?"},
+                {"files":[], "text": "You are a Minecraft expert. You can finish tasks by strict and correct reasoning. Now you face a task: obtain a diamond pickaxe in Minecraft. Reasoning what should you do first when you have nothing in the inventory."}
             ], inputs=multimodaltextbox, label="Chat")
 
             gr.Examples(examples=[
@@ -127,16 +128,16 @@ with gr.Blocks(fill_height=True, theme=gr.themes.Ocean()) as demo:
 
             gr.Examples(examples=[
                 {"files":["data/images/022-zombie.png"], "text": "Please provide the bounding box coordinate of the region this sentence describes: zombie."},
-                {"files":["data/images/031-sheep.png"], "text": "Please provide the bounding box coordinate of the region this sentence describes: sheep."},
                 {"files":["data/images/037-cow.png"], "text": "Please provide the bounding box coordinate of the region this sentence describes: cow."},
-                {"files":["data/images/039-villager.png"], "text": "Please provide the bounding box coordinate of the region this sentence describes: villager."},
+                {"files":["data/images/031-sheep.png"], "text": "Output the bounding box of the sheep in the image."},
+                {"files":["data/images/039-villager.png"], "text": "Output the bounding box of the villager in the image."},
             ], inputs=multimodaltextbox, label="Visual Box Grounding")
 
             gr.Examples(examples=[
-                {"files":["data/images/020-ender_dragen.png"], "text": "Generate the caption in English with grounding:"},
-                {"files":["data/images/028-savannah_biome.png"], "text": "Generate the caption in English with grounding:"},
-                {"files":["data/images/043-layout.png"], "text": "Generate the caption in English with grounding:"},
-                {"files":["data/images/052-inventory.jpg"], "text": "Generate the caption in English with grounding:"},
+                {"files":["data/images/020-ender_dragen.png"], "text": "Generate the caption with grounding:"},
+                {"files":["data/images/028-savannah_biome.png"], "text": "Generate the caption with grounding:"},
+                {"files":["data/images/043-layout.png"], "text": "Generate the caption with grounding:"},
+                {"files":["data/images/052-inventory.jpg"], "text": "Generate the caption with grounding:"},
             ], inputs=multimodaltextbox, label="Visual Captioning and Box Grounding")
 
 demo.queue().launch(server_name=args.host, server_port=args.port, share=True)
