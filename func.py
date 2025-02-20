@@ -198,30 +198,31 @@ def predict(message, history, model_name, model_url, api_key, temp, max_output_t
                 yield "", history
 
         if ENABLE_GROUNDING:
-            point_image_path = None
-            if ENABLE_POINT_GROUDING: # show point?
-                from utils import show_point
-                # obj_name, points, image_path = show_point(model_name, history)
-                point_image_path = show_point(model_name, history)
+            if 'qwen2.5-' in model_name or 'qwen2-' in model_name or 'mc-base' in model_name or 'molmo-' in model_name:
+                point_image_path = None
+                if ENABLE_POINT_GROUDING: # show point?
+                    from utils import show_point
+                    # obj_name, points, image_path = show_point(model_name, history)
+                    point_image_path = show_point(model_name, history)
 
-            box_image_path = None
-            if ENABLE_BOX_GROUDING:
-                from utils import show_box
-                # obj_name, boxes, image_path = show_box(model_name, history)
-                box_image_path = show_box(model_name, history)
-            
-            if box_image_path is not None:
-                history[-1]["metadata"] = {"title": "🎨 Grounding Box"}
-                history.append({"role": "assistant", "content":{"path": box_image_path}})
-                yield "", history
+                box_image_path = None
+                if ENABLE_BOX_GROUDING:
+                    from utils import show_box
+                    # obj_name, boxes, image_path = show_box(model_name, history)
+                    box_image_path = show_box(model_name, history)
+                
+                if box_image_path is not None:
+                    history[-1]["metadata"] = {"title": "🎨 Grounding Box"}
+                    history.append({"role": "assistant", "content":{"path": box_image_path}})
+                    yield "", history
 
-            if point_image_path is not None:
-                if 'molmo-' in model_name:
-                    history[-1]["content"] = f"```html\n{history[-1]['content']}\n```"
-                history[-1]["metadata"] = {"title": "🎨 Grounding Point"}
-                # history[-1]["content"] = gr.HTML(history[-1]["content"])
-                history.append({"role": "assistant", "content":{"path": point_image_path}})
-                yield "", history
+                if point_image_path is not None:
+                    if 'molmo-' in model_name:
+                        history[-1]["content"] = f"```html\n{history[-1]['content']}\n```"
+                    history[-1]["metadata"] = {"title": "🎨 Grounding Point"}
+                    # history[-1]["content"] = gr.HTML(history[-1]["content"])
+                    history.append({"role": "assistant", "content":{"path": point_image_path}})
+                    yield "", history
 
         
 

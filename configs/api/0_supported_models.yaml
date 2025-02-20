@@ -1,7 +1,13 @@
 models:
+    - llama-3.3-70b-instruct:
+        model_name: llama-3.3-70b-instruct
+        base_url: http://100.107.154.21:8000/v1
     - deepseek-r1-distill-qwen-32b:
         model_name: deepseek-r1-distill-qwen-32b
         base_url: http://100.107.154.21:12000/v1
+    - deepseek-r1-distill-qwen-7b:
+        model_name: deepseek-r1-distill-qwen-7b
+        base_url: http://100.107.154.21:13000/v1
     # - deepseek-r1-distill-qwen-14b:
     #     model_name: deepseek-r1-distill-qwen-14b
     #     base_url: http://100.76.181.24:8000/v1
@@ -17,15 +23,27 @@ models:
     # - deepseek-vl2: # need chat template
     #     model_name: deepseek-vl2
     #     base_url: http://100.107.154.21:13000/v1
-    - mc-pointing-qwen2-vl-7b-epoch1-250209:
-        model_name: mc-pointing-qwen2-vl_7b-995
-        base_url: http://100.107.154.21:9105/v1
-    - mc-pointing-qwen2-vl-7b-step400-250209:
-        model_name: mc-pointing-qwen2-vl_7b-400
-        base_url: http://100.107.154.21:9104/v1
-    - anneal-qwen2-vl_7b-200:
-        model_name: anneal-qwen2-vl_7b-200
-        base_url: http://100.107.154.21:9105/v1
+    # - mc-pointing-qwen2-vl-7b-epoch1-250209:
+    #     model_name: mc-pointing-qwen2-vl_7b-995
+    #     base_url: http://100.107.154.21:9105/v1
+    # - mc-pointing-qwen2-vl-7b-step400-250209:
+    #     model_name: mc-pointing-qwen2-vl_7b-400
+    #     base_url: http://100.107.154.21:9104/v1
+    # - anneal-qwen2-vl_7b-200:
+    #     model_name: anneal-qwen2-vl_7b-200
+    #     base_url: http://100.107.154.21:9105/v1
+    # - point-qwen2-vl-7b-250113:
+    #     model_name: point-qwen2-vl-7b-250113
+    #     base_url: http://100.77.86.12:8008/v1
+    - mc-base-qwen2-vl-2b-250216:
+        model_name: mc-base-qwen2-vl-2b-250216
+        base_url: http://100.107.154.21:21000/v1
+    - mc-base-qwen2-vl-7b-250215:
+        model_name: mc-base-qwen2-vl-7b-250215
+        base_url: http://100.107.154.21:20000/v1
+    - mc-base-llava-vicuna-13b-250217:
+        model_name: mc-base-llava-vicuna-13b-250217
+        base_url: http://100.107.154.21:19000/v1
     - custom:
         model_name: 
         base_url: 

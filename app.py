@@ -123,7 +123,7 @@ with gr.Blocks(fill_height=True, theme=gr.themes.Ocean()) as demo:
                 {"files":["data/images/035-cow.png"], "text": "Pinpoint the cow."},
                 {"files":["data/images/045-crafting.png"], "text": "Pinpoint the oak_planks."},
                 {"files":["data/images/023-chicken.png"], "text": "Pinpoint the chicken."},
-                {"files":["data/images/014-inventory.png"], "text": "Pinpoint the oak_log."},
+                {"files":["data/images/014-inventory.png"], "text": "Pinpoint the apple."},
             ], inputs=multimodaltextbox, label="Visual Point Grounding")
 
             gr.Examples(examples=[
